@@ -1,13 +1,6 @@
 #!/usr/bin/python3
-"""DB storage module
-"""
-<<<<<<< HEAD
-    tests for FileStorage
-"""
-import unittest
-from models.engine.db_storage import DBStorage
-from sqlalchemy.engine.base import Engine
-=======
+"""DB storage module"""
+
 
 from os import getenv
 
@@ -26,7 +19,6 @@ HBNB_MYSQL_USER = getenv("HBNB_MYSQL_USER")
 HBNB_MYSQL_PWD = getenv("HBNB_MYSQL_PWD")
 HBNB_MYSQL_HOST = getenv("HBNB_MYSQL_HOST")
 HBNB_MYSQL_DB = getenv("HBNB_MYSQL_DB")
->>>>>>> fac2c91d666fd3ea5463a2a30762d737479b9d6a
 
 
 class DBStorage:
@@ -95,3 +87,10 @@ class DBStorage:
     def close(self):
         """close scoped session"""
         self.__session.close()
+
+
+
+
+
+
+"""close scoped session"""

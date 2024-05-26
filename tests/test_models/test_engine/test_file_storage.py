@@ -1,15 +1,12 @@
 #!/usr/bin/python3
-<<<<<<< HEAD
 """ Module for testing file storage"""
 import unittest
 from models.base_model import BaseModel
 from models import storage
 import os
 from os import environ
-=======
+
 """This module defines a class to manage file storage for hbnb clone"""
-import json
->>>>>>> fac2c91d666fd3ea5463a2a30762d737479b9d6a
 
 
 class FileStorage:
