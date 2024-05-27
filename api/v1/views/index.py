@@ -1,28 +1,46 @@
 #!/usr/bin/python3
 """
-App views for AirBnB_clone_v3 API v1
-we will use the blueprint app_views
-to group all these views
+index
 """
+
 from flask import jsonify
 from api.v1.views import app_views
+
 from models import storage
 
 
-@app_views.route('/status')
+@app_views.route("/status", methods=['GET'], strict_slashes=False)
 def status():
-    """ returns status OK """
-    return jsonify({"status": "OK"})
+    """
+    status route
+    :return: response with json
+    """
+    data = {
+        "status": "OK"
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
 
 
-@app_views.route('/stats')
-def count():
-    """ returns number of each objects by type """
-    classes = {"Amenity": "amenities",
-               "City": "cities",
-               "Place": "places",
-               "Review": "reviews",
-               "State": "states",
-               "User": "users"}
-    return jsonify({classes[cls]: storage.count(cls)
-                    for cls in classes})
+@app_views.route("/stats", methods=['GET'], strict_slashes=False)
+def stats():
+    """
+    stats of all objs route
+    :return: json of all objs
+    """
+    data = {
+        "amenities": storage.count("Amenity"),
+        "cities": storage.count("City"),
+        "places": storage.count("Place"),
+        "reviews": storage.count("Review"),
+        "states": storage.count("State"),
+        "users": storage.count("User"),
+    }
+
+    resp = jsonify(data)
+    resp.status_code = 200
+
+    return resp
