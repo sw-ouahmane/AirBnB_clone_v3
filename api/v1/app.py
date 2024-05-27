@@ -1,37 +1,45 @@
 #!/usr/bin/python3
 """
-Contains the class DBStorage that
-handles all database storage
+app
 """
-from api.v1.views import app_views
+
 from flask import Flask, jsonify
-from models import storage
 from flask_cors import CORS
+from os import getenv
+
+from api.v1.views import app_views
+from models import storage
+
 
 app = Flask(__name__)
-app.register_blueprint(app_views)
+
 CORS(app, resources={r"/*": {"origins": "0.0.0.0"}})
+
+app.register_blueprint(app_views)
 
 
 @app.teardown_appcontext
-def teardown_session(exception):
-    """teardown session"""
+def teardown(exception):
+    """
+    teardown function
+    """
     storage.close()
 
 
 @app.errorhandler(404)
-def not_found(error):
-    """handler for 404 errors that returns a
-    JSON-formatted 404 status code"""
-    return jsonify({"error": "Not found"}), 404
+def handle_404(exception):
+    """
+    handles 404 error
+    :return: returns 404 json
+    """
+    data = {
+        "error": "Not found"
+    }
 
+    resp = jsonify(data)
+    resp.status_code = 404
 
-if __name__ == '__main__':
-    """main method"""
-    from os import getenv
-    HBNB_API_HOST = getenv('HBNB_API_HOST')
-    HBNB_API_PORT = getenv('HBNB_API_PORT')
+    return(resp)
 
-    host = '0.0.0.0' if not HBNB_API_HOST else HBNB_API_HOST
-    port = 5000 if not HBNB_API_PORT else int(HBNB_API_PORT)
-    app.run(host=host, port=port, threaded=True, debug=True)
+if __name__ == "__main__":
+    app.run(getenv("HBNB_API_HOST"), getenv("HBNB_API_PORT"))
