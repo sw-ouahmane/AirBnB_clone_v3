@@ -1,73 +1,97 @@
 #!/usr/bin/python3
-""" objects that handle all default RestFul API actions for States """
+"""
+route for handling State objects and operations
+"""
+from flask import jsonify, abort, request
+from api.v1.views import app_views, storage
 from models.state import State
-from models import storage
-from api.v1.views import app_views
-from flask import abort, jsonify, make_response, request
-import requests
 
-def fetch_json_from_api(url):
-    try:
-        r = requests.get(url)
-        if r.status_code == 200:
-            try:
-                r_j = r.json()
-                return r_j
-            except ValueError as e:
-                print("Error decoding JSON:", e)
-                print("Response content:", r.text)
-                return None
-        else:
-            print(f"HTTP request failed with status code {r.status_code}")
-            print("Response content:", r.text)
-            return None
-    except requests.RequestException as e:
-        print("HTTP request failed:", e)
-        return None
 
-@app_views.route('/states', methods=['GET'], strict_slashes=False)
-def get_states():
+@app_views.route("/states", methods=["GET"], strict_slashes=False)
+def state_get_all():
     """
-    Retrieves the list of all State objects
+    retrieves all State objects
+    :return: json of all states
     """
-    all_states = storage.all(State).values()
-    list_states = []
-    for state in all_states:
-        list_states.append(state.to_dict())
-    return jsonify(list_states)
+    state_list = []
+    state_obj = storage.all("State")
+    for obj in state_obj.values():
+        state_list.append(obj.to_json())
 
-@app_views.route('/states/<state_id>', methods=['GET'], strict_slashes=False)
-def get_state(state_id):
-    """ Retrieves a specific State """
-    state = storage.get(State, state_id)
-    if not state:
+    return jsonify(state_list)
+
+
+@app_views.route("/states", methods=["POST"], strict_slashes=False)
+def state_create():
+    """
+    create state route
+    :return: newly created state obj
+    """
+    state_json = request.get_json(silent=True)
+    if state_json is None:
+        abort(400, 'Not a JSON')
+    if "name" not in state_json:
+        abort(400, 'Missing name')
+
+    new_state = State(**state_json)
+    new_state.save()
+    resp = jsonify(new_state.to_json())
+    resp.status_code = 201
+
+    return resp
+
+
+@app_views.route("/states/<state_id>",  methods=["GET"], strict_slashes=False)
+def state_by_id(state_id):
+    """
+    gets a specific State object by ID
+    :param state_id: state object id
+    :return: state obj with the specified id or error
+    """
+
+    fetched_obj = storage.get("State", str(state_id))
+
+    if fetched_obj is None:
         abort(404)
 
-    return jsonify(state.to_dict())
+    return jsonify(fetched_obj.to_json())
 
-@app_views.route('/states/<state_id>', methods=['DELETE'], strict_slashes=False)
-def delete_state(state_id):
+
+@app_views.route("/states/<state_id>",  methods=["PUT"], strict_slashes=False)
+def state_put(state_id):
     """
-    Deletes a State Object
+    updates specific State object by ID
+    :param state_id: state object ID
+    :return: state object and 200 on success, or 400 or 404 on failure
     """
-    state = storage.get(State, state_id)
-    if not state:
+    state_json = request.get_json(silent=True)
+    if state_json is None:
+        abort(400, 'Not a JSON')
+    fetched_obj = storage.get("State", str(state_id))
+    if fetched_obj is None:
+        abort(404)
+    for key, val in state_json.items():
+        if key not in ["id", "created_at", "updated_at"]:
+            setattr(fetched_obj, key, val)
+    fetched_obj.save()
+    return jsonify(fetched_obj.to_json())
+
+
+@app_views.route("/states/<state_id>", methods=["DELETE"],
+                 strict_slashes=False)
+def state_delete_by_id(state_id):
+    """
+    deletes State by id
+    :param state_id: state object id
+    :return: empty dict with 200 or 404 if not found
+    """
+
+    fetched_obj = storage.get("State", str(state_id))
+
+    if fetched_obj is None:
         abort(404)
 
-    storage.delete(state)
+    storage.delete(fetched_obj)
     storage.save()
 
-    return make_response(jsonify({}), 200)
-
-@app_views.route('/fetch_external_data', methods=['GET'], strict_slashes=False)
-def fetch_external_data():
-    """
-    Fetch data from an external API and return the JSON response
-    """
-    url = "http://your-api-endpoint"
-    data = fetch_json_from_api(url)
-    if data:
-        return jsonify(data)
-    else:
-        return make_response(jsonify({"error": "Failed to fetch data"}), 500)
-
+    return jsonify({})
